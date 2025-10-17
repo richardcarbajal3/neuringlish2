@@ -1,0 +1,22 @@
+{
+  "name": "neuringlish",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "next": "13.5.1",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "@supabase/supabase-js": "^2.32.0",
+    "react-force-graph": "^1.40.8"
+  },
+  "devDependencies": {
+    "typescript": "5.1.6",
+    "@types/react": "18.2.21",
+    "@types/node": "20.4.2"
+  }
+}

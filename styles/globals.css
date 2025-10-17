@@ -1,0 +1,4 @@
+:root{ --bg:#001219; }
+html,body,#__next{height:100%}
+body{ margin:0; background:var(--bg); color:#e6eef8; font-family:Inter, system-ui, Arial; }
+a{ color:#06b6d4; }
