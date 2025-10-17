@@ -1,3 +1,4 @@
+import Graph from '../components/Graph'
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import Link from 'next/link'
@@ -113,10 +114,14 @@ export default function Home() {
         </div>
       </aside>
 
-      <main style={{flex:1, padding:24}}>
-        <h1 style={{color:'#001219'}}>NeurEnglish — Graph MVP</h1>
-        <p>Use the left panel to analyze and add sentences to your persistent semantic network.</p>
-      </main>
+      <main style={{flex:1, padding:24, borderLeft:'1px solid #555', display:'flex', flexDirection:'column'}}>
+  <h1 style={{color:'#001219'}}>NeurEnglish — Graph MVP</h1>
+  <p>Use the left panel to analyze and add sentences to your persistent semantic network.</p>
+  <div style={{flex:1, marginTop:12}}>
+    <Graph />
+  </div>
+</main>
+      
     </div>
   )
 }
