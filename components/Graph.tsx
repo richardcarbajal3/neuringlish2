@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import ForceGraph2D, { GraphData, NodeObject, LinkObject } from "react-force-graph-2d";
+import { ForceGraph2D } from "react-force-graph";
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
