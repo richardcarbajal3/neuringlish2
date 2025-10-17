@@ -12,6 +12,7 @@ type SentenceRow = {
   verb?: string
   objects?: string
   adjectives?: string
+  created_at?: string
 }
 
 export default function GraphPage() {
