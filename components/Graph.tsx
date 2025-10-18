@@ -1,80 +1,69 @@
-import { useEffect, useState } from "react";
-import { ForceGraph2D } from "react-force-graph";
-import { createClient } from "@supabase/supabase-js";
+import { useEffect, useRef } from "react";
+import * as d3 from "d3";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
-type SentenceNode = {
-  id: number;
-  name: string;
-  group: string;
-  vector: number[];
-};
-
-type SentenceLink = {
-  source: number;
-  target: number;
-  value: number;
-};
-
-export default function Graph() {
-  const [nodes, setNodes] = useState<SentenceNode[]>([]);
-  const [links, setLinks] = useState<SentenceLink[]>([]);
-
-  function cosineSimilarity(vecA: number[], vecB: number[]) {
-    if (!vecA || !vecB) return 0;
-    let dot = 0, normA = 0, normB = 0;
-    for (let i = 0; i < vecA.length; i++) {
-      dot += vecA[i] * vecB[i];
-      normA += vecA[i] ** 2;
-      normB += vecB[i] ** 2;
-    }
-    return dot / (Math.sqrt(normA) * Math.sqrt(normB));
-  }
+export default function Graph({ nodes = [], links = [] }) {
+  const ref = useRef<SVGSVGElement | null>(null);
 
   useEffect(() => {
-    async function fetchData() {
-      const { data: sentences, error } = await supabase
-        .from("sentences")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(20);
+    if (!ref.current) return;
 
-      if (error) return console.error(error);
+    const width = 600;
+    const height = 400;
 
-      const nodesData: SentenceNode[] = sentences.map((s: any) => ({
-        id: s.id,
-        name: s.sentence,
-        group: s.verb || "otros",
-        vector: s.vector || [1, 0, 0],
-      }));
+    const svg = d3.select(ref.current);
+    svg.selectAll("*").remove(); // limpiar antes de dibujar
 
-      const linksData: SentenceLink[] = [];
-      for (let i = 0; i < nodesData.length; i++) {
-        for (let j = i + 1; j < nodesData.length; j++) {
-          const sim = cosineSimilarity(nodesData[i].vector, nodesData[j].vector);
-          if (sim > 0) linksData.push({ source: nodesData[i].id, target: nodesData[j].id, value: sim });
-        }
+    const simulation = d3.forceSimulation(nodes)
+      .force("link", d3.forceLink(links).id((d: any) => d.id).distance(100))
+      .force("charge", d3.forceManyBody().strength(-200))
+      .force("center", d3.forceCenter(width / 2, height / 2));
+
+    const link = svg.append("g")
+      .attr("stroke", "#aaa")
+      .selectAll("line")
+      .data(links)
+      .join("line")
+      .attr("stroke-width", 2);
+
+    const node = svg.append("g")
+      .attr("stroke", "#fff")
+      .attr("stroke-width", 1.5)
+      .selectAll("circle")
+      .data(nodes)
+      .join("circle")
+      .attr("r", 10)
+      .attr("fill", "#69b3a2")
+      .call(d3.drag()
+        .on("start", (event, d: any) => {
+          if (!event.active) simulation.alphaTarget(0.3).restart();
+          d.fx = d.x;
+          d.fy = d.y;
+        })
+        .on("drag", (event, d: any) => {
+          d.fx = event.x;
+          d.fy = event.y;
+        })
+        .on("end", (event, d: any) => {
+          if (!event.active) simulation.alphaTarget(0);
+          d.fx = null;
+          d.fy = null;
+        })
+      );
+
+    node.append("title").text((d: any) => d.id);
+
+    simulation.on("tick", () => {
+      link
+        .attr("x1", (d: any) => d.source.x)
+        .attr("y1", (d: any) => d.source.y)
+        .attr("x2", (d: any) => d.target.x)
+        .attr("y2", (d: any) => d.target.y);
+
+      node
+        .attr("cx", (d: any) => d.x)
+        .attr("cy", (d: any) => d.y);
+    });
+  }, [nodes, links]);
+
+  return <svg ref={ref} width="600" height="400"></svg>;
       }
-
-      setNodes(nodesData);
-      setLinks(linksData);
-    }
-
-    fetchData();
-  }, []);
-
-  return (
-    <div style={{ width: "100%", height: "100%" }}>
-      <ForceGraph2D
-        graphData={{ nodes, links }}
-        nodeLabel="name"
-        nodeAutoColorBy="group"
-        linkWidth={l => (l as any).value * 5}
-      />
-    </div>
-  );
-}
